@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -60,6 +61,8 @@ public class Player : MonoBehaviour
 
     private Animator _animator;
 
+    private GameManager _gameManager;
+
     private void Awake()
     {
         _rigid = GetComponent<Rigidbody2D>();
@@ -70,6 +73,11 @@ public class Player : MonoBehaviour
             Debug.LogError("_rigid 초기화 에러");
         if (_collider == null)
             Debug.LogError("_collider 초기화 에러");
+    }
+
+    private void Start()
+    {
+        _gameManager = GameManager.Instance;
     }
 
     private void FixedUpdate()
@@ -106,17 +114,43 @@ public class Player : MonoBehaviour
         {
             _isJump = true;
         }
+
+        if (_isDead)
+        {
+            if (Input.GetKey(KeyCode.Space) || Input.GetMouseButtonDown(0))
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            }
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        // 캐릭터가 죽으면 충돌처리X
+        if (_isDead) return;
+
         // 충돌을 하면 움직이지 못하게 하고 죽은 애니메이션을 보이게 해보자. 
-        if (collision.gameObject.CompareTag("background"))
+        if (collision.gameObject.CompareTag("background") || collision.gameObject.CompareTag("obstacle"))
         {
             _isDead = true; // 움직이지 못하게 하기 
 
             // 죽은 애니메이션 보이게 하기 -> 애니메이터가 필요하다. 
             _animator.SetInteger("isDead", 1);
+
+            _gameManager.Lose();
+
+            return;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (_isDead) return;
+
+        if (collision.gameObject.CompareTag("obstacle"))
+        {
+            // 점수 추가
+            _gameManager.AddScore();
         }
     }
 }

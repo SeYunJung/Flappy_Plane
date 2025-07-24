@@ -15,10 +15,14 @@ public class AutoGenerator : MonoBehaviour
 
     public Transform ground;
 
+    public float collidingObjWidth = 8f;
+
+    private ObstacleManager obstacleManager;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        obstacleManager = ObstacleManager.Instance;
     }
 
     // Update is called once per frame
@@ -41,23 +45,35 @@ public class AutoGenerator : MonoBehaviour
 
         if (collision.gameObject.CompareTag("background"))
         {
+            //Debug.Log($"{collision.name}과 충돌함!");
             // 이동시키기. 
             // 현재위치 + x축으로 오브젝트 가로 길이 * 5만큼 이동 
             Vector3 collidingObjPos = collision.transform.position;
-            //float collidingObjWidth = ((BoxCollider2D)collision).size.x;
-            float collidingObjWidth = 8f;
 
-            collidingObjPos.x += (collidingObjWidth * 5f); // collidingObjPos.x = collidingObjPos.x + (collidingObjWidth * 5f)
+            collidingObjPos.x = collidingObjPos.x + (collidingObjWidth * 5f);
+            //collidingObjPos.x += (collidingObjWidth * 5f); // collidingObjPos.x = collidingObjPos.x + (collidingObjWidth * 5f)
 
+            //Debug.Log($"{collision.name} 바뀌기 전 위치 : {collision.transform.position}");
             collision.transform.position = collidingObjPos;
+            //Debug.Log($"{collision.name} 바뀐 후 위치 : {collision.transform.position}");
             return;
         }
 
-        //if (collision.gameObject.CompareTag("Obstacle"))
-        //{
-        //    // 장애물을 랜덤 배치
-        //    Obstacle obstacle = collision.gameObject.GetComponent<Obstacle>();
-        //    obstacle.SetRandomPosition();
-        //}
+        if (collision.gameObject.CompareTag("obstacle"))
+        {
+            Debug.Log($"BgLooper가 장애물 부딪힘.");
+            // 장애물을 랜덤 배치
+            //Obstacle obstacle = collision.gameObject.GetComponent<Obstacle>();
+            //obstacle.SetRandomPosition();
+
+            // 장애물과 부딪히면 장애물을 현재 위치의 *5로 이동하고, 장애물 사이 폭도 변경
+            GameObject parentObj = collision.transform.parent.gameObject;
+            obstacleManager.SetObstaclePosition(parentObj, collidingObjWidth);
+
+            // 장애물 사이 폭 변경
+            obstacleManager.SetChildObjDistance(parentObj);
+
+            return;
+        }
     }
 }
